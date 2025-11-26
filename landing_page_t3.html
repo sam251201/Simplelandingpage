@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Demo Landing — Task 3</title>
+  <meta name="description" content="Demo landing page for Google Analytics events & goals (Task 3)">
+
+  <!-- GA4: replace G-XXXXXXX with your measurement id -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXX', { 'send_page_view': true });
+
+    // helper to send custom event
+    function sendEvent(name, params) {
+      try { gtag('event', name, params || {}); }
+      catch(e){ console.warn("gtag error", e); }
+    }
+  </script>
+
+  <style>
+    body { font-family: system-ui, Roboto, Arial; margin:0; padding:24px; background:#f7f9fc; color:#111; }
+    .wrap { max-width:900px; margin:0 auto; background:white; padding:28px; border-radius:8px; box-shadow:0 6px 18px rgba(10,20,30,0.06); }
+    h1 { margin:0 0 10px; font-size:28px; }
+    p.lead { color:#444; margin-bottom:18px; }
+    .btn { display:inline-block; background:#2563eb; color:white; padding:12px 18px; border-radius:8px; text-decoration:none; cursor:pointer; border:none; }
+    .secondary { background:#efefef; color:#111; border:1px solid #ddd; }
+    .stats { display:flex; gap:12px; margin-top:18px; }
+    .card { background:#f5f7fb; padding:12px 16px; border-radius:8px; }
+    .small { font-size:13px; color:#666; }
+    form input, textarea { width:100%; padding:10px; margin:6px 0 12px; border:1px solid #ddd; border-radius:6px }
+    footer { margin-top:28px; font-size:13px; color:#666; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Demo Landing Page — Analytics Events & Goals</h1>
+    <p class="lead">This dummy page demonstrates page views, user events, and goals for Task 3.</p>
+
+    <!-- CTA button to track as conversion -->
+    <button id="cta" class="btn">Sign up now</button>
+
+    <!-- Track a link click -->
+    <p style="margin-top:16px;">
+      <a id="externalLink" href="https://example.com" target="_blank" class="btn secondary">Visit Example.com</a>
+    </p>
+
+    <!-- Form to track conversions -->
+    <h3 style="margin-top:22px;">Newsletter signup</h3>
+    <form id="signupForm">
+      <input id="name" name="name" placeholder="Your name" required />
+      <input id="email" name="email" type="email" placeholder="Email" required />
+      <button class="btn" type="submit">Subscribe</button>
+    </form>
+
+    <!-- Some interactive elements -->
+    <div style="margin-top:22px;">
+      <label class="small">Rate this demo:</label>
+      <div style="margin-top:8px;">
+        <button class="btn secondary" onclick="rateDemo(1)">1</button>
+        <button class="btn secondary" onclick="rateDemo(2)">2</button>
+        <button class="btn secondary" onclick="rateDemo(3)">3</button>
+        <button class="btn secondary" onclick="rateDemo(4)">4</button>
+        <button class="btn secondary" onclick="rateDemo(5)">5</button>
+      </div>
+    </div>
+
+    <div class="stats" aria-hidden>
+      <div class="card"><div class="small">Page views (simulated)</div><div id="pv">0</div></div>
+      <div class="card"><div class="small">Signups</div><div id="signups">0</div></div>
+      <div class="card"><div class="small">CTA clicks</div><div id="ctac">0</div></div>
+    </div>
+
+    <footer>
+      <p>Task 3 — Landing page, hosting and traffic demo. Implemented Google Events & Goals.</p>
+    </footer>
+  </div>
+
+  <script>
+    // local counters (for UI only)
+    let pageViews = 0, signups = 0, ctaClicks = 0;
+    function incPv(){ pageViews++; document.getElementById('pv').innerText = pageViews; }
+    incPv();
+
+    // track CTA button click
+    document.getElementById('cta').addEventListener('click', function(e){
+      ctaClicks++; document.getElementById('ctac').innerText = ctaClicks;
+      // send GA custom event (will be used as "Goal/Conversion" when marked in GA UI)
+      sendEvent('cta_click', { 'method': 'primary_button', 'label': 'Sign up CTA' });
+      // also send a conversion-like event for GA4
+      sendEvent('make_purchase', { 'value': 0, 'currency': 'USD' });
+      alert("CTA clicked — event sent to GA.");
+    });
+
+    // track external link clicks
+    document.getElementById('externalLink').addEventListener('click', function(e){
+      sendEvent('external_link_click', { 'link_text': this.innerText, 'href': this.href });
+    });
+
+    // signup form tracking
+    document.getElementById('signupForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      signups++; document.getElementById('signups').innerText = signups;
+
+      // send event and a conversion-like event
+      sendEvent('signup', { 'name': name, 'email_provided': !!email });
+      sendEvent('purchase', { 'value': 0 }); // example conversion-style event
+      alert("Form submitted — events sent to GA.");
+
+      // optional clear
+      this.reset();
+    });
+
+    // rating event
+    function rateDemo(score){
+      sendEvent('demo_rating', { 'score': score });
+      alert('Rated ' + score + ' — event sent to GA.');
+    }
+
+    // scrolling event example (send at 50% scroll)
+    let sc50Sent = false;
+    window.addEventListener('scroll', function(){
+      const pct = (window.scrollY + window.innerHeight) / document.documentElement.scrollHeight * 100;
+      if(!sc50Sent && pct > 50){
+        sc50Sent = true;
+        sendEvent('scroll_50', { 'percent': 50 });
+      }
+    });
+
+    // Example of custom timing
+    window.addEventListener('load', function(){
+      sendEvent('page_loaded', { 'ts': Date.now() });
+    });
+  </script>
+</body>
+</html>
